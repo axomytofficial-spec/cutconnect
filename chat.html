@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131d">
+<title>Chats — CutConnect</title>
+<style>
+:root{--bg:#0d1020;--panel:#151a2d;--panel2:#1b2238;--text:#f6f7fb;--muted:#a7b0c7;--line:#2a3450;--lime:#c8ff5f}*{box-sizing:border-box}
+html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;display:flex;flex-direction:column;height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer}
+.hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.hdr h1{margin:0;font-size:22px;flex:1}.ib{background:none;border:0;font-size:24px;line-height:1;padding:4px 8px;color:var(--text);text-decoration:none}
+.view{display:none;flex:1;min-height:0;flex-direction:column}.view.on{display:flex}
+.tabs{display:flex;background:var(--panel);border-bottom:1px solid var(--line)}
+.tab{flex:1;text-align:center;padding:14px 8px;font-weight:800;font-size:14px;letter-spacing:.6px;color:var(--muted);border:0;background:none;border-bottom:4px solid transparent}
+.tab.on{color:var(--text);border-bottom-color:var(--lime)}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--lime);color:#121521;font-size:12px;margin-left:6px;line-height:20px}
+.qf{padding:12px 16px 4px;color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.8px}
+.chips{display:flex;gap:10px;padding:8px 16px 12px}
+.chip{padding:8px 18px;border-radius:99px;border:1px solid var(--line);background:none;color:var(--muted)}.chip.on{background:#c8ff5f22;border-color:var(--lime);color:var(--lime)}
+.list{flex:1;overflow:auto}
+.row{display:flex;gap:12px;align-items:center;padding:14px 16px;border-top:1px solid #ffffff0d;cursor:pointer}
+.av{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:19px;color:#121521;background:linear-gradient(135deg,#8c9cff,#c8ff5f)}
+.mid{flex:1;min-width:0}.nm{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row.un .pv{color:var(--text);font-weight:700}
+.rt{flex:none;text-align:right;color:var(--muted);font-size:12px}.dot{display:block;width:12px;height:12px;border-radius:50%;background:var(--lime);margin:6px 0 0 auto}
+.ub{flex:none;border:1px solid var(--line);background:none;border-radius:12px;padding:8px 14px;font-weight:800}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.msgs{flex:1;overflow:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:8px}
+.b{max-width:80%;padding:9px 13px;border-radius:16px;word-wrap:break-word;white-space:pre-wrap;font-size:15px}
+.b small{display:block;font-size:11px;opacity:.65;margin-top:3px}
+.b.me{align-self:flex-end;background:var(--lime);color:#121521;border-bottom-right-radius:4px}
+.b.th{align-self:flex-start;background:var(--panel2);border-bottom-left-radius:4px}
+.comp{border-top:1px solid var(--line);background:var(--panel);padding:10px 12px calc(80px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+.f{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#12162a;color:var(--text);font:inherit;resize:none}
+.send{display:flex;gap:8px}.send .f{flex:1;max-height:110px}
+.sb{flex:none;border:0;border-radius:14px;padding:0 18px;background:var(--lime);color:#121521;font-weight:800}
+.note{color:var(--muted);font-size:12px;padding:0 14px 6px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1d2540;border:1px solid var(--line);padding:10px 16px;border-radius:12px;display:none;z-index:9;font-size:14px}
+</style>
+</head>
+<body>
+<section id="listView" class="view on">
+<div class="hdr"><a class="ib" href="index.html" aria-label="Back">←</a><h1>Chats <small style="font-size:11px;color:var(--muted);font-weight:400">v7</small></h1></div>
+<div class="qf">QUICK FILTERS</div>
+<div class="chips"><button class="chip on" data-f="all">All</button><button class="chip" data-f="un">Unread</button></div>
+<div id="list" class="list"></div>
+</section>
+<section id="threadView" class="view">
+<div class="hdr"><button id="back" class="ib" aria-label="Back">←</button><div id="tav" class="av" style="width:42px;height:42px;font-size:16px;border-radius:13px"></div><h1 id="tname" style="font-size:18px"></h1></div>
+<div id="msgs" class="msgs"></div>
+<div class="note">Don’t share passwords or payment details in chat.</div>
+<div class="comp"><input id="myname" class="f" placeholder="Your name (shown to the other person)" maxlength="50" style="display:none"><div class="send"><textarea id="txt" class="f" rows="1" maxlength="500" placeholder="Type a message…"></textarea><button id="sendb" class="sb" type="button">Send</button></div></div>
+</section>
+<div id="toast" role="status"></div>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const firebaseConfig={apiKey:"AIzaSyBjGiQMTg9tTIFirPT9sEpC51yTNuEumRo",authDomain:"pykule-98b57.firebaseapp.com",projectId:"pykule-98b57",appId:"1:348888874891:web:db31dd4ef09446ca46398e"};
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const st={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3200)}
+let me=null,blocked=new Set(),inb=[],outb=[],names={},tab='in',filt='all',cur=null,last=0,read={};
+try{read=JSON.parse(st.get('cc_read')||'{}')}catch(e){}
+const want=new URLSearchParams(location.search).get('to');
+const ini=n=>(String(n||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2)||'?').toUpperCase();
+const fmt=t=>{const d=new Date(t),n=new Date();return d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{day:'numeric',month:'short'})};
+function groups(){const seen={},all=[...inb,...outb].filter(m=>!seen[m.id]&&(seen[m.id]=1)).sort((a,b)=>a.t-b.t),g={};
+all.forEach(m=>{const o=m.from===me?m.to:m.from;(g[o]=g[o]||[]).push(m)});return g}
+function nameOf(o,arr){if(names[o])return names[o];const f=[...(arr||[])].reverse().find(m=>m.from===o&&m.fn);return f?f.fn:'Chat'}
+function convs(){const g=groups();let out=Object.keys(g).filter(o=>!blocked.has(o)).map(o=>{const a=g[o],l=a[a.length-1];return{o,a,l,kind:a[0].from===me?'out':'in',name:nameOf(o,a),un:l.from!==me&&l.t>(read[o]||0)}});
+if(want&&want!==me&&!g[want]&&!blocked.has(want))out.push({o:want,a:[],l:null,kind:'out',name:nameOf(want),un:false,fresh:1});return out.sort((x,y)=>(y.l?y.l.t:Date.now())-(x.l?x.l.t:Date.now()))}
+function drawList(){const all=convs(),ci=all.filter(c=>c.kind==='in'&&c.un).length,co=all.filter(c=>c.kind==='out'&&c.un).length;
+const un=all.filter(c=>c.un).length;document.title=(un?'('+un+') ':'')+'Chats — CutConnect';
+const l=all.filter(c=>filt==='all'||c.un);
+$('list').innerHTML=l.length?l.map(c=>`<div class="row ${c.un?'un':''}" data-o="${safe(c.o)}"><div class="av">${safe(ini(c.name))}</div><div class="mid"><div class="nm">${safe(c.name)}</div><div class="pv">${c.l?(c.l.from===me?'You: ':'')+safe(c.l.text):'Tap to start chatting'}</div></div><div class="rt">${c.l?fmt(c.l.t):'New'}${c.un?'<span class="dot"></span>':''}</div></div>`).join(''):`<div class="empty">${filt==='un'?'No unread chats.':'No chats yet. Open an editor on the home page and tap Message.'}</div>`}
+function drawThread(){const g=groups(),a=g[cur]||[];$('tname').textContent=nameOf(cur,a);$('tav').textContent=ini(nameOf(cur,a));
+const box=$('msgs'),atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80||!box.children.length;
+box.innerHTML=a.length?a.map(m=>`<div class="b ${m.from===me?'me':'th'}">${safe(m.text)}<small>${fmt(m.t)}</small></div>`).join(''):'<div class="empty">Say hello 👋<br>Describe your project and budget.</div>';
+if(atBottom)box.scrollTop=box.scrollHeight;
+if(a.length){read[cur]=Date.now();st.set('cc_read',JSON.stringify(read))}}
+function showView(id){['listView','threadView'].forEach(v=>$(v).classList.toggle('on',v===id))}
+function open_(o){if(o===me){toast('This is your own profile.');return}cur=o;showView('threadView');
+$('myname').style.display=st.get('cc_name')?'none':'block';drawThread();
+if(!names[o])db.collection('profiles').doc(o).get().then(d=>{if(d.exists){names[o]=d.data().name;if(cur===o)drawThread()}}).catch(()=>{})}
+function close_(){cur=null;showView('listView');history.replaceState(null,'','chat.html');drawList()}
+let db;
+addEventListener('DOMContentLoaded',()=>{
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));drawList()});
+$('list').onclick=e=>{const r=e.target.closest('.row');if(r)open_(r.dataset.o)};
+$('back').onclick=close_;
+if(typeof firebase==='undefined'){$('list').innerHTML='<div class="empty">Could not load. Open the site from its Netlify link.</div>';return}
+firebase.initializeApp(firebaseConfig);const auth=firebase.auth();db=firebase.firestore();let unsubs=[];
+$('sendb').onclick=async()=>{if(!me||!cur)return toast('Connecting… try again.');const t=$('txt').value.trim();if(!t)return;
+let nm=st.get('cc_name');if(!nm){nm=$('myname').value.trim();if(!nm)return toast('Please enter your name.');st.set('cc_name',nm);$('myname').style.display='none'}
+if(Date.now()-last<1500)return toast('Please wait a moment.');last=Date.now();$('txt').value='';
+try{await db.collection('messages').add({from:me,fn:nm,to:cur,text:t.slice(0,500),t:Date.now()})}catch(e){$('txt').value=t;toast(e.code==='permission-denied'?'Blocked by Firebase rules (permission-denied).':'Could not send. Try again.')}};
+$('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(hover:hover)').matches){e.preventDefault();$('sendb').click()}});
+auth.onAuthStateChanged(u=>{
+if(!u){auth.signInAnonymously().catch(x=>{$('list').innerHTML='<div class="empty">'+(x.code==='auth/operation-not-allowed'||x.code==='auth/admin-restricted-operation'?'Setup needed: enable Anonymous sign-in in Firebase.':'Could not connect ('+safe(x.code||'error')+').')+'</div>'});return}
+me=u.uid;unsubs.forEach(f=>f());unsubs=[];
+const ids=s=>s.docs.map(d=>({id:d.id,...d.data()}));
+unsubs.push(db.collection('messages').where('to','==',me).onSnapshot(s=>{inb=ids(s);drawList();if(cur)drawThread()},e=>{$('list').innerHTML='<div class="empty">Could not load chats ('+safe(e.code||'error')+').</div>'}),
+db.collection('messages').where('from','==',me).onSnapshot(s=>{outb=ids(s);drawList();if(cur)drawThread()},()=>{}));
+db.collection('profiles').get().then(s=>{s.docs.forEach(d=>names[d.id]=d.data().name);drawList();if(cur)drawThread()}).catch(()=>{});
+drawList();
+if(want===me){toast('This is your own profile.')}
+});
+});
+</script>
+</body></html>
